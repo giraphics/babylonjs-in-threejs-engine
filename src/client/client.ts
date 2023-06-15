@@ -32,7 +32,7 @@ function createBabylonJSScene(engine: BABYLON.Engine) {
     mat.wireframe = true;
     const box = BABYLON.MeshBuilder.CreateBox('box', { size: 4 }, bjsScene);
     box.material = mat;
-    box.position.y = 0;
+    box.position.y = 10;
 
     const axis = new BABYLON.Vector3(0, 1, 0)
     bjsScene.registerBeforeRender(function () {
@@ -49,7 +49,7 @@ function renderBabylonJS(cam: THREE.PerspectiveCamera) {
     if (bjsScene) {
         const projection = BABYLON.Matrix.FromArray(matrix)
         engine.wipeCaches(false)
-        // scene.beforeRender = () => {
+        // bjsScene.beforeRender = () => {
         //   engine.wipeCaches(true);
         // };
         if (!bjsScene.activeCamera) {
