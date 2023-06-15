@@ -2,6 +2,14 @@ import * as THREE from 'three'
 import { Scene } from '@babylonjs/core/scene'
 import * as BABYLON from '@babylonjs/core'
 
+// Reserve width and height
+window.innerWidth = 800
+window.innerHeight = 800
+
+// Create WebGL 2 Context
+const canvas = document.createElement('canvas')
+const context = canvas.getContext('webgl2') as WebGL2RenderingContext
+
 /*************************************************/
 /***************** BABYLON SCENE *****************/
 /*************************************************/
@@ -20,19 +28,22 @@ function createBabylonJSScene(engine: BABYLON.Engine) {
     bjsScene.autoClearDepthAndStencil = false
     bjsScene.detachControl()
 
-    const box = BABYLON.MeshBuilder.CreateBox('box', { size: 5 }, bjsScene)
-    //box.position.y = -10;
+    const mat = new BABYLON.StandardMaterial("mat1", bjsScene);
+    mat.wireframe = true;
+    const box = BABYLON.MeshBuilder.CreateBox('box', { size: 4 }, bjsScene);
+    box.material = mat;
+    box.position.y = 0;
 
-    let a = 0
     const axis = new BABYLON.Vector3(0, 1, 0)
     bjsScene.registerBeforeRender(function () {
-        box.rotate(axis, (a = 0.01))
+        box.rotate(axis, 0.01)
     })
 
     return bjsScene
 }
 
-function renderBabylonJS(matrix: any) {
+function renderBabylonJS(cam: THREE.PerspectiveCamera) {
+    const matrix = cam.matrix.elements;
     const engine = bjsScene.getEngine()
 
     if (bjsScene) {
@@ -57,39 +68,27 @@ function renderBabylonJS(matrix: any) {
 }
 
 /*************************************************/
-/***************** BABYLON SCENE *****************/
+/***************** THREEJS SCENE *****************/
 /*************************************************/
 
-window.innerWidth = 800
-window.innerHeight = 800
-
-const useThreeJSDomElement = false
-let canvas
-let renderer: THREE.WebGLRenderer
-let context: WebGL2RenderingContext
-if (useThreeJSDomElement) {
-    renderer = new THREE.WebGLRenderer()
-    canvas = renderer.domElement
-    context = canvas.getContext('webgl2') as WebGL2RenderingContext
-} else {
-    canvas = document.createElement('canvas')
-    context = canvas.getContext('webgl2') as WebGL2RenderingContext
-    renderer = new THREE.WebGLRenderer({
-        context: context,
-    })
-    //   renderer.setClearColor( 0x000000, 1);
-}
+const threeJsRenderer = new THREE.WebGLRenderer({
+    context: context,
+})
 
 document.body.appendChild(canvas)
-renderer.setSize(window.innerWidth, window.innerHeight)
+threeJsRenderer.setSize(window.innerWidth, window.innerHeight)
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight
 
 const sceneThreeJS = new THREE.Scene()
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
 camera.position.z = 2
+
+/*************************************************/
+/*******CREATE BABYLON JS ENGINE AND SCENE********/
 bjsEngine = createBabylonJSEngine(context)
 bjsScene = createBabylonJSScene(bjsEngine)
+/*************************************************/
 
 const geometry = new THREE.BoxGeometry()
 const material = new THREE.MeshBasicMaterial({
@@ -104,8 +103,8 @@ window.addEventListener('resize', onWindowResize, false)
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight
     camera.updateProjectionMatrix()
-    renderer.setSize(window.innerWidth, window.innerHeight)
-    renderThreeJS()
+    threeJsRenderer.setSize(window.innerWidth, window.innerHeight)
+    renderThreeJS(camera)
 }
 
 function animate() {
@@ -113,12 +112,12 @@ function animate() {
     cube.rotation.x += 0.01
     cube.rotation.y += 0.01
 
-    renderThreeJS()
-    renderBabylonJS(camera.matrix.elements)
+    renderThreeJS(camera)
+    renderBabylonJS(camera)
 }
 
-function renderThreeJS() {
-    renderer.render(sceneThreeJS, camera)
+function renderThreeJS(cam: THREE.PerspectiveCamera) {
+    threeJsRenderer.render(sceneThreeJS, cam)
 }
 
 //setInterval(() => {console.log(camera);}, 5000);
